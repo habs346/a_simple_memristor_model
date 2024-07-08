@@ -1,0 +1,40 @@
+`include "constants.vams"
+`include "disciplines.vams"
+
+module mem_ver(p,n);
+inout p; // M port
+inout n; // CE prot
+electrical p,n;
+// define neccessary parameters
+parameter real Roff = 1000k ; // resistance of HRS
+parameter real Ron = 10k ;    // resistance of LRS
+parameter real threshold=1.4;
+// define neccessary varible
+real R=(Roff-Ron)/2;
+real th=threshold;
+real Rnow=Roff;
+real ith=th/Rnow;
+analog begin
+    if (V(p,n)>=(threshold-0.2)) // memristor is going to be set 
+    begin
+        Rnow=R*(1-tanh(300*(V(p,n)-Rnow*ith)))+Ron;
+        I(p,n)<+ V(p,n)/Rnow;
+        if (tanh(300*(V(p,n)-ith*Rnow))==1)
+        begin
+        th=-threshold;
+        ith=th/Rnow;
+        end
+    end
+    else
+    begin
+        Rnow=R*(1-tanh(300*(V(p,n)-th)))+Ron;
+        I(p,n)<+ V(p,n)/Rnow;
+        if (tanh(300*(V(p,n)-th))==-1)
+        begin
+        th=threshold;
+        ith=th/Rnow;
+        end
+    end
+end
+endmodule
+
